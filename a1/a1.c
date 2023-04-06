@@ -51,6 +51,8 @@ void parse(const char *path, int nr, char **option)
     {
         puts("ERROR");
         puts("wrong magic");
+        close(fp);
+        free(hed);
         return;
         
     }
@@ -58,18 +60,24 @@ void parse(const char *path, int nr, char **option)
     {
         puts("ERROR");
         puts("wrong version");
+        close(fp);
+        free(hed);
         return;
     }
     if(!flagSectNr)
     {
         puts("ERROR");
-        puts("wrong sect_nr");
+        puts("wrong sect_nr");    
+        close(fp);
+        free(hed);
         return;
     }
     if(!flagSectTypes)
     {
         puts("ERROR");
         puts("wrong sect_types");
+        close(fp);
+        free(hed);
         return;
     }
     puts("SUCCESS");
@@ -81,8 +89,8 @@ void parse(const char *path, int nr, char **option)
     //int SECTION_HEADERS = (int)NR_OF_SECTIONS*sizeof(head);     //NR_OF_SECTIONS*22
     //printf("%c: %hd: %d\n",MAGIC,HEADER_SIZE,VERSION);
     //printf("%c: %hd: %d: %d: %s: %c: %d: %d: %d\n",MAGIC,HEADER_SIZE,VERSION,(int)NR_OF_SECTIONS,hed->name,(hed->type),(hed->offset),(hed->size),SECTION_HEADERS);
-    close(fp);
     //hed->name = NULL;
+    close(fp);
     free(hed);
 }
 
@@ -171,6 +179,7 @@ void list(const char *path, int nr, char **option)
 
 int main(int argc, char **argv)
 {
+    char *c = calloc(128, sizeof(char));
     if (argc >= 2)
     {
         if (strcmp(argv[1], "variant") == 0)
@@ -179,7 +188,6 @@ int main(int argc, char **argv)
         }
         else if (strcmp(argv[1], "list") == 0)
         {
-            char *c = calloc(128, sizeof(char));
             if (sscanf(argv[argc - 1], "path=%s", c) == 1)
             {
                 printf("SUCCESS\n");
@@ -187,10 +195,10 @@ int main(int argc, char **argv)
             }
             else
                 puts("Invalid directory path!");
+
         }
         else if (strcmp(argv[1], "parse") == 0)
         {
-            char *c = calloc(128, sizeof(char));
             if (sscanf(argv[argc - 1], "path=%s", c) == 1)
             {
                 
@@ -199,17 +207,7 @@ int main(int argc, char **argv)
             else
                 puts("Invalid directory path!");
         }
-        else if (strcmp(argv[1], "corrupted") == 0)
-        {
-            char *c = calloc(128, sizeof(char));
-            if (sscanf(argv[argc - 1], "path=%s", c) == 1)
-            {
-                printf("SUCCESS\n");
-                list(c, argc - 3, (argv + 2));
-            }
-            else
-                puts("Invalid directory path!");
-        }
     }
+    free(c);
     return 0;
 }
