@@ -8,10 +8,45 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <fcntl.h>
+
+
+typedef struct Head
+{
+    char name[13];
+    char type;
+    int offset, size;
+}head;
 
 void parse(const char *path, int nr, char **option)
 {
-    return;
+
+    //struct dirent *entry = NULL;
+    //char fullPath[512];
+    //struct stat statbuf;
+    //bool flagMagic = false, flagVersion = false, flagSectNr = false, flagSectTypes = false;
+
+    int fp = open(path, O_RDONLY);
+    if(fp == -1)
+    {
+        perror("Could not open output file!");
+        close(fp);
+        return;
+    }
+    char* header = calloc(1000, sizeof(char)); 
+    header[1000] = '\0';
+    // read(fp,header,52);
+    char MAGIC,NR_OF_SECTIONS;
+    short int HEADER_SIZE; 
+    int VERSION = 0;
+    head* hed = calloc(1,sizeof(head));
+    read(fp,header,1000);
+    puts(header);
+    sscanf(header,"%c%hd%d%c%s%c%d%d",&MAGIC,&HEADER_SIZE,&VERSION,&NR_OF_SECTIONS,hed->name,&(hed->type),&(hed->offset),&(hed->size));
+    // MAGIC(char),HEADER_SIZE(short int),VERSION(int),NR_OF_SECTIONS(char),HEAD(struct)
+    int SECTION_HEADERS = (int)NR_OF_SECTIONS*sizeof(head);     //1*22
+    printf("%c: %hd: %d: %c: %s: %c: %d: %d: %d\n",MAGIC,HEADER_SIZE,VERSION,NR_OF_SECTIONS,hed->name,(hed->type),(hed->offset),(hed->size),SECTION_HEADERS);
+    close(fp);
 }
 
 void list(const char *path, int nr, char **option)
