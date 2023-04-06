@@ -21,10 +21,6 @@ typedef struct Head
 void parse(const char *path, int nr, char **option)
 {
 
-    //struct dirent *entry = NULL;
-    //char fullPath[512];
-    //struct stat statbuf;
-    //bool flagMagic = false, flagVersion = false, flagSectNr = false, flagSectTypes = false;
 
     int fp = open(path, O_RDONLY);
     if(fp == -1)
@@ -33,20 +29,61 @@ void parse(const char *path, int nr, char **option)
         close(fp);
         return;
     }
-    char* header = calloc(1000, sizeof(char)); 
-    header[1000] = '\0';
-    // read(fp,header,52);
+
     char MAGIC,NR_OF_SECTIONS;
     short int HEADER_SIZE; 
-    int VERSION = 0;
+    int VERSION;
     head* hed = calloc(1,sizeof(head));
-    read(fp,header,1000);
-    puts(header);
-    sscanf(header,"%c%hd%d%c%s%c%d%d",&MAGIC,&HEADER_SIZE,&VERSION,&NR_OF_SECTIONS,hed->name,&(hed->type),&(hed->offset),&(hed->size));
-    // MAGIC(char),HEADER_SIZE(short int),VERSION(int),NR_OF_SECTIONS(char),HEAD(struct)
-    int SECTION_HEADERS = (int)NR_OF_SECTIONS*sizeof(head);     //1*22
-    printf("%c: %hd: %d: %c: %s: %c: %d: %d: %d\n",MAGIC,HEADER_SIZE,VERSION,NR_OF_SECTIONS,hed->name,(hed->type),(hed->offset),(hed->size),SECTION_HEADERS);
+    read(fp,&MAGIC,1);
+    read(fp,&HEADER_SIZE,2);
+    read(fp,&VERSION,4);
+    read(fp,&NR_OF_SECTIONS,1);
+    read(fp,(hed->name),13);
+    read(fp,&(hed->type),1);
+    read(fp,&(hed->offset),4);
+    read(fp,&(hed->size),4);
+    bool flagMagic = false, flagVersion = false, flagSectNr = false, flagSectTypes = false;
+    flagMagic = (MAGIC =='S');
+    flagVersion = (61<=VERSION && 127>=VERSION);
+    flagSectNr = (5<=NR_OF_SECTIONS && 17>=NR_OF_SECTIONS);
+    flagSectTypes = ((int)(hed->type)) == 73 || ((int)(hed->type)) == 16 ;
+    if(!flagMagic)
+    {
+        puts("ERROR");
+        puts("wrong magic");
+        return;
+        
+    }
+    if(!flagVersion)
+    {
+        puts("ERROR");
+        puts("wrong version");
+        return;
+    }
+    if(!flagSectNr)
+    {
+        puts("ERROR");
+        puts("wrong sect_nr");
+        return;
+    }
+    if(!flagSectTypes)
+    {
+        puts("ERROR");
+        puts("wrong sect_types");
+        return;
+    }
+    puts("SUCCESS");
+
+    //read(fp,header,1000);
+    //puts(header);
+    // sscanf(header,"%c%hd%d%c%s%c%d%d",&MAGIC,&HEADER_SIZE,&VERSION,&NR_OF_SECTIONS,hed->name,&(hed->type),&(hed->offset),&(hed->size));
+    // // MAGIC(char),HEADER_SIZE(short int),VERSION(int),NR_OF_SECTIONS(char),HEAD(struct)
+    //int SECTION_HEADERS = (int)NR_OF_SECTIONS*sizeof(head);     //NR_OF_SECTIONS*22
+    //printf("%c: %hd: %d\n",MAGIC,HEADER_SIZE,VERSION);
+    //printf("%c: %hd: %d: %d: %s: %c: %d: %d: %d\n",MAGIC,HEADER_SIZE,VERSION,(int)NR_OF_SECTIONS,hed->name,(hed->type),(hed->offset),(hed->size),SECTION_HEADERS);
     close(fp);
+    //hed->name = NULL;
+    free(hed);
 }
 
 void list(const char *path, int nr, char **option)
@@ -156,7 +193,7 @@ int main(int argc, char **argv)
             char *c = calloc(128, sizeof(char));
             if (sscanf(argv[argc - 1], "path=%s", c) == 1)
             {
-                printf("SUCCESS\n");
+                
                 parse(c, argc - 3, (argv + 2));
             }
             else
