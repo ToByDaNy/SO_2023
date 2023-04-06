@@ -10,87 +10,91 @@
 #include <stdbool.h>
 #include <fcntl.h>
 
-
 typedef struct Head
 {
-    char name[13];
+    char name[14];
     char type;
     int offset, size;
-}head;
+} head;
 
 void parse(const char *path, int nr, char **option)
 {
 
-
     int fp = open(path, O_RDONLY);
-    if(fp == -1)
+    if (fp == -1)
     {
         perror("Could not open output file!");
         close(fp);
         return;
     }
 
-    char MAGIC,NR_OF_SECTIONS;
-    short int HEADER_SIZE; 
+    char MAGIC, NR_OF_SECTIONS;
+    short int HEADER_SIZE;
     int VERSION;
-    head* hed = calloc(1,sizeof(head));
-    read(fp,&MAGIC,1);
-    read(fp,&HEADER_SIZE,2);
-    read(fp,&VERSION,4);
-    read(fp,&NR_OF_SECTIONS,1);
-    read(fp,(hed->name),13);
-    read(fp,&(hed->type),1);
-    read(fp,&(hed->offset),4);
-    read(fp,&(hed->size),4);
+    read(fp, &MAGIC, 1);
+    read(fp, &HEADER_SIZE, 2);
+    read(fp, &VERSION, 4);
+    read(fp, &NR_OF_SECTIONS, 1);
+
     bool flagMagic = false, flagVersion = false, flagSectNr = false, flagSectTypes = false;
-    flagMagic = (MAGIC =='S');
-    flagVersion = (61<=VERSION && 127>=VERSION);
-    flagSectNr = (5<=NR_OF_SECTIONS && 17>=NR_OF_SECTIONS);
-    flagSectTypes = ((int)(hed->type)) == 73 || ((int)(hed->type)) == 16 ;
-    if(!flagMagic)
+    flagMagic = (MAGIC == 'S');
+    flagVersion = (61 <= VERSION && 127 >= VERSION);
+    flagSectNr = (5 <= NR_OF_SECTIONS && 17 >= NR_OF_SECTIONS);
+    if (!flagMagic)
     {
         puts("ERROR");
         puts("wrong magic");
         close(fp);
-        free(hed);
+
         return;
-        
     }
-    if(!flagVersion)
+    if (!flagVersion)
     {
         puts("ERROR");
         puts("wrong version");
         close(fp);
-        free(hed);
+
         return;
     }
-    if(!flagSectNr)
+    if (!flagSectNr)
     {
         puts("ERROR");
-        puts("wrong sect_nr");    
+        puts("wrong sect_nr");
         close(fp);
-        free(hed);
+
         return;
     }
-    if(!flagSectTypes)
+    head *hed = calloc(NR_OF_SECTIONS, sizeof(head));
+
+    for (int i = 0; i < NR_OF_SECTIONS; i++)
+    {
+        read(fp, (hed[i].name), 13);
+        hed[i].name[13] = '\0';
+        read(fp, &(hed[i].type), 1);
+        read(fp, &(hed[i].offset), 4);
+        read(fp, &(hed[i].size), 4);
+        flagSectTypes = ((int)(hed[i].type)) == 73 || ((int)(hed[i].type)) == 16 || ((int)(hed[i].type)) == 97 || ((int)(hed[i].type)) == 29;
+        if (!flagSectTypes)
+        {
+            break;
+        }
+    }
+    if (!flagSectTypes)
     {
         puts("ERROR");
         puts("wrong sect_types");
         close(fp);
-        free(hed);
+
         return;
     }
     puts("SUCCESS");
-
-    //read(fp,header,1000);
-    //puts(header);
-    // sscanf(header,"%c%hd%d%c%s%c%d%d",&MAGIC,&HEADER_SIZE,&VERSION,&NR_OF_SECTIONS,hed->name,&(hed->type),&(hed->offset),&(hed->size));
-    // // MAGIC(char),HEADER_SIZE(short int),VERSION(int),NR_OF_SECTIONS(char),HEAD(struct)
-    //int SECTION_HEADERS = (int)NR_OF_SECTIONS*sizeof(head);     //NR_OF_SECTIONS*22
-    //printf("%c: %hd: %d\n",MAGIC,HEADER_SIZE,VERSION);
-    //printf("%c: %hd: %d: %d: %s: %c: %d: %d: %d\n",MAGIC,HEADER_SIZE,VERSION,(int)NR_OF_SECTIONS,hed->name,(hed->type),(hed->offset),(hed->size),SECTION_HEADERS);
-    //hed->name = NULL;
+    printf("version=%d\nnr_sections=%d\n", VERSION, NR_OF_SECTIONS);
+    for (int i = 0; i < NR_OF_SECTIONS; i++)
+    {
+        printf("section%d: %s %d %d\n", i + 1, hed[i].name, (int)hed[i].type, hed[i].size);
+    }
     close(fp);
+
     free(hed);
 }
 
@@ -195,13 +199,12 @@ int main(int argc, char **argv)
             }
             else
                 puts("Invalid directory path!");
-
         }
         else if (strcmp(argv[1], "parse") == 0)
         {
             if (sscanf(argv[argc - 1], "path=%s", c) == 1)
             {
-                
+
                 parse(c, argc - 3, (argv + 2));
             }
             else
