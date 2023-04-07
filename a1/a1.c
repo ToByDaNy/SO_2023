@@ -84,7 +84,7 @@ void parse(const char *path, int nr, char **option)
         puts("ERROR");
         puts("wrong sect_types");
         close(fp);
-
+        free(hed);
         return;
     }
     puts("SUCCESS");
