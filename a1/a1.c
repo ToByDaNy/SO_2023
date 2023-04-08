@@ -30,7 +30,7 @@ void ok(const char *path, bool *flagSUCCES, bool *flagLines)
     char MAGIC, NR_OF_SECTIONS;
     int VERSION;
     read(fp, &MAGIC, 1);
-    lseek(fp,2,SEEK_CUR);
+    lseek(fp, 2, SEEK_CUR); //  nu am nevoie sa citesc size-ul headerului
     read(fp, &VERSION, 4);
     read(fp, &NR_OF_SECTIONS, 1);
     bool flagMagic = false, flagVersion = false, flagSectNr = false, flagSectTypes = false;
@@ -53,7 +53,7 @@ void ok(const char *path, bool *flagSUCCES, bool *flagLines)
         return;
     }
 
-    int **hed = calloc(NR_OF_SECTIONS, sizeof(int *));
+    int **hed = calloc(NR_OF_SECTIONS, sizeof(int *)); // [0] pentru offset [1] pentru size
     for (int i = 0; i < NR_OF_SECTIONS; i++)
     {
         hed[i] = calloc(2, sizeof(int));
@@ -82,7 +82,7 @@ void ok(const char *path, bool *flagSUCCES, bool *flagLines)
     for (int i = 0; i < (int)NR_OF_SECTIONS; i++)
     {
         lseek(fp, hed[i][0], SEEK_SET);
-        char *strr = calloc(hed[i][1]+1, sizeof(char));
+        char *strr = calloc(hed[i][1] + 1, sizeof(char));
         read(fp, strr, hed[i][1]);
         strr[hed[i][1]] = '\0';
         int count = 0;
@@ -115,14 +115,14 @@ void ok(const char *path, bool *flagSUCCES, bool *flagLines)
     close(fp);
 }
 
-void findAll(const char *path, bool *flagSUCCES,int* first)
+void findAll(const char *path, bool *flagSUCCES, int *first)
 {
     DIR *dir = NULL;
     struct dirent *entry = NULL;
     char fullPath[512];
     struct stat statbuf;
     dir = opendir(path);
-    
+
     if (dir == NULL)
     {
         return;
@@ -136,23 +136,23 @@ void findAll(const char *path, bool *flagSUCCES,int* first)
             {
                 if (S_ISREG(statbuf.st_mode))
                 {
-                    bool flagLines = true;
+                    bool flagLines = false;
                     ok(fullPath, flagSUCCES, &flagLines);
-                    if (*flagSUCCES && *first == 0)
-                    {
-                        (*first)++;
-                        puts("SUCCESS");
-                    }
+                    if ((*flagSUCCES))
+                        if ((*first == 0))
+                        {
+                            (*first)++;
+                            puts("SUCCESS");
+                        }
                     if (flagLines)
                     {
                         printf("%s\n", fullPath);
                         *flagSUCCES = true;
-                        flagLines = false;
                     }
                 }
                 if (S_ISDIR(statbuf.st_mode))
                 {
-                    findAll(fullPath, flagSUCCES,first);
+                    findAll(fullPath, flagSUCCES, first);
                 }
             }
         }
@@ -193,25 +193,12 @@ void extract(const char *path, int nr, char **option)
         if ((int)NR_OF_SECTIONS >= nrSection)
         {
             head htyp;
-            for (int i = 0; i < (int)NR_OF_SECTIONS; i++)
-            {
-                if (i + 1 < nrSection)
-                {
-
-                    lseek(fp, 22, SEEK_CUR);
-                }
-                else if (i + 1 == nrSection)
-                {
-                    read(fp, (htyp.name), 13);
-                    htyp.name[13] = '\0';
-                    read(fp, &(htyp.type), 1);
-                    read(fp, &(htyp.offset), 4);
-                    read(fp, &(htyp.size), 4);
-                }
-                else
-                    break;
-            }
-
+            lseek(fp, 22 * (nrSection - 1), SEEK_CUR); // am nevoie doar de headerul sectiunii alese ----> restul nu ma intereseaza => sar la header ul dorit
+            read(fp, (htyp.name), 13);
+            htyp.name[13] = '\0';
+            read(fp, &(htyp.type), 1);
+            read(fp, &(htyp.offset), 4);
+            read(fp, &(htyp.size), 4);
             lseek(fp, htyp.offset, SEEK_SET);
             char *strr = calloc(htyp.size, sizeof(char));
             char *links = strr;
@@ -221,9 +208,7 @@ void extract(const char *path, int nr, char **option)
 
                 for (int i = 1; i < nrLine && strlen(strr) > 0; i++)
                 {
-                    char s[] = "\n";
-
-                    char *s1 = strstr(strr, s);
+                    char *s1 = strstr(strr, "\n");
                     if (s1 == NULL)
                     {
                         flagLine = false;
@@ -277,10 +262,11 @@ void parse(const char *path, int nr, char **option)
     }
 
     char MAGIC, NR_OF_SECTIONS;
-    short int HEADER_SIZE;
+    // short int HEADER_SIZE;
     int VERSION;
     read(fp, &MAGIC, 1);
-    read(fp, &HEADER_SIZE, 2);
+    lseek(fp, 2, SEEK_CUR);
+    // read(fp, &HEADER_SIZE, 2); //  nu am nevoie sa citesc size-ul headerului
     read(fp, &VERSION, 4);
     read(fp, &NR_OF_SECTIONS, 1);
 
@@ -339,12 +325,10 @@ void parse(const char *path, int nr, char **option)
         strc = NULL;
         puts("ERROR");
         puts("wrong sect_types");
-
         return;
     }
     puts("SUCCESS");
     printf("version=%d\nnr_sections=%d\n%s", VERSION, NR_OF_SECTIONS, strc);
-
     free(strc);
     strc = NULL;
     close(fp);
@@ -392,20 +376,17 @@ void listare(const char *path, int nr, char **option)
 
                 if (flagSize)
                 {
-                    if (S_ISREG(statbuf.st_mode))
+                    if (S_ISREG(statbuf.st_mode) && (sizeConstrain > statbuf.st_size))
                     {
-                        if (sizeConstrain > statbuf.st_size)
+                        if (!flagPerm)
                         {
-                            if (!flagPerm)
+                            printf("%s\n", fullPath);
+                        }
+                        else
+                        {
+                            if (statbuf.st_mode & __S_IWRITE)
                             {
                                 printf("%s\n", fullPath);
-                            }
-                            else
-                            {
-                                if (statbuf.st_mode & __S_IWRITE)
-                                {
-                                    printf("%s\n", fullPath);
-                                }
                             }
                         }
                     }
@@ -479,7 +460,7 @@ int main(int argc, char **argv)
             {
                 bool flagSucces = false;
                 int first = 0;
-                findAll(c, &flagSucces,&first);
+                findAll(c, &flagSucces, &first);
                 if (!flagSucces)
                 {
                     puts("ERROR");
