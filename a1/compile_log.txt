@@ -1,6 +1,0 @@
-a1.c: In function 'cacat':
-a1.c:409:55: error: '__S_IWRITE' undeclared (first use in this function); did you mean 'S_IWRITE'?
-  409 |                                 if (statbuf.st_mode & __S_IWRITE)
-      |                                                       ^~~~~~~~~~
-      |                                                       S_IWRITE
-a1.c:409:55: note: each undeclared identifier is reported only once for each function it appears in
