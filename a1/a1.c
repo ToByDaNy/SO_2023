@@ -28,10 +28,9 @@ void ok(const char *path, bool *flagSUCCES, bool *flagLines)
         return;
     }
     char MAGIC, NR_OF_SECTIONS;
-    short int HEADER_SIZE;
     int VERSION;
     read(fp, &MAGIC, 1);
-    read(fp, &HEADER_SIZE, 2);
+    lseek(fp,2,SEEK_CUR);
     read(fp, &VERSION, 4);
     read(fp, &NR_OF_SECTIONS, 1);
     bool flagMagic = false, flagVersion = false, flagSectNr = false, flagSectTypes = false;
@@ -194,16 +193,12 @@ void extract(const char *path, int nr, char **option)
         if ((int)NR_OF_SECTIONS >= nrSection)
         {
             head htyp;
-            int salt = 0;
             for (int i = 0; i < (int)NR_OF_SECTIONS; i++)
             {
                 if (i + 1 < nrSection)
                 {
 
-                    lseek(fp, 18, SEEK_CUR);
-                    int aux = 0;
-                    read(fp, &aux, 4); // size
-                    salt += aux;
+                    lseek(fp, 22, SEEK_CUR);
                 }
                 else if (i + 1 == nrSection)
                 {
@@ -212,7 +207,6 @@ void extract(const char *path, int nr, char **option)
                     read(fp, &(htyp.type), 1);
                     read(fp, &(htyp.offset), 4);
                     read(fp, &(htyp.size), 4);
-                    salt += htyp.size;
                 }
                 else
                     break;
