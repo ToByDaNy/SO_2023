@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "compare": "c",
+        "*.tcc": "c",
+        "type_traits": "c",
+        "typeinfo": "c"
+    }
+}
