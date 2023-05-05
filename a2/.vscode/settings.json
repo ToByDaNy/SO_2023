@@ -3,6 +3,8 @@
         "compare": "c",
         "*.tcc": "c",
         "type_traits": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "a2_helper.h": "c",
+        "pthread.h": "c"
     }
 }
