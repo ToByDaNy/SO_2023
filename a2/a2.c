@@ -74,7 +74,7 @@ void *thrd2(void *arg)
     }
     else{
         k--;
-        info(END, 9, s->id);
+         info(END, 9, s->id);
     }
     
     sem_post(s->sem);
@@ -274,10 +274,10 @@ int main()
         info(END, 1, 0);
     }
 
-    // pthread_create(&(threads[0]), NULL, thrd, NULL);
 
     free(procese);
     free(threads);
+    free(threads_st);
 
     return 0;
 }
