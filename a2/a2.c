@@ -24,6 +24,7 @@ typedef struct fire_
     sem_t *sem;
     sem_t *sem2;
     pthread_mutex_t *lock;
+    pthread_cond_t *cond;
 } fire;
 
 void *thrd(void *arg)
@@ -59,23 +60,42 @@ void *thrd2(void *arg)
     fire *s = (fire *)arg;
     sem_wait(s->sem);
     info(BEGIN, 9, s->id);
-
-    k++;
-    while (k < 6 && ks == 0)
+    pthread_mutex_lock(s->lock);
+    if (s->id != 12)
     {
-        sem_wait(s->sem2);
+        k++;
+        pthread_cond_broadcast(s->cond);
     }
-    sem_post(s->sem2);
+    while (k < 6)
+    {
+        if (s->id == 12)
+        {
+
+            while (k < 5)
+            {
+                pthread_cond_wait(s->cond, s->lock);
+            }
+            break;
+            
+        }
+        pthread_cond_wait(s->cond, s->lock);
+    }
+
     if (s->id == 12)
     {
+        k = 100;
+        pthread_cond_broadcast(s->cond);
         info(END, 9, s->id);
-        ks = 1;
     }
     else
     {
-        k--;
+        k -= 1;
+        pthread_cond_signal(s->cond);
         info(END, 9, s->id);
     }
+    pthread_mutex_unlock(s->lock);
+
+    
 
     sem_post(s->sem);
     return NULL;
@@ -92,7 +112,7 @@ int main()
 {
     init();
     int nrProcese = 8;
-    int nrThreads = 42;
+    int nrThreads = 46;
     pid_t *procese = (pid_t *)calloc(nrProcese, sizeof(pid_t));
     procese[0] = getpid();
     pthread_t *threads = (pthread_t *)calloc(nrThreads, sizeof(pthread_t));
@@ -101,7 +121,8 @@ int main()
     sem_t second2;
     sem_t first;
     sem_t first2;
-    pthread_mutex_t lock;
+    pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+    pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
     // sem_t third;
     if (pthread_mutex_init(&lock, NULL) != 0)
     {
@@ -119,7 +140,7 @@ int main()
     {
         return -1;
     }
-    if (sem_init(&second2, 0, 0) != 0)
+    if (sem_init(&second2, 0, 1) != 0)
     {
         return -1;
     }
@@ -242,6 +263,7 @@ int main()
                             threads_st[i].sem = &second;
                             threads_st[i].sem2 = &second2;
                             threads_st[i].lock = &lock;
+                            threads_st[i].cond = &cond;
                             pthread_create(&threads[i], NULL, thrd2, &(threads_st[i]));
                         }
                         for (int i = 4; i < 42; i++)
@@ -272,9 +294,9 @@ int main()
         waitpid(procese[1], NULL, 0);
 
         info(END, 1, 0);
-        free(procese);
-        free(threads);
-        free(threads_st);
+        // free(procese);
+        // free(threads);
+        // free(threads_st);
     }
 
     return 0;
