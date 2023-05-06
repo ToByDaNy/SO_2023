@@ -27,34 +27,10 @@ typedef struct fire_
     pthread_cond_t *cond;
 } fire;
 
-void *thrd(void *arg)
-{
-    fire *s = (fire *)arg;
-    if (s->id == 1)
-    {
-        sem_wait(s->sem);
-    }
-    info(BEGIN, 2, s->id);
-    if (s->id == 4)
-    {
-        sem_post(s->sem);
-    }
+sem_t *logSem = NULL;
+sem_t *logSem2 = NULL;
 
-    if (s->id == 4)
-    {
-        sem_wait(s->sem2);
-    }
-
-    info(END, 2, s->id);
-
-    if (s->id == 1)
-    {
-        sem_post(s->sem2);
-    }
-
-    return NULL;
-}
-int k = 0, ks = 0;
+int k = 0;
 void *thrd2(void *arg)
 {
     fire *s = (fire *)arg;
@@ -70,13 +46,11 @@ void *thrd2(void *arg)
     {
         if (s->id == 12)
         {
-
             while (k < 5)
             {
                 pthread_cond_wait(s->cond, s->lock);
             }
             break;
-            
         }
         pthread_cond_wait(s->cond, s->lock);
     }
@@ -95,16 +69,67 @@ void *thrd2(void *arg)
     }
     pthread_mutex_unlock(s->lock);
 
-    
-
     sem_post(s->sem);
     return NULL;
 }
+
+void *thrd(void *arg)
+{
+    fire *s = (fire *)arg;
+    if (s->id == 1)
+    {
+        sem_wait(s->sem);
+    }
+
+    if (s->id == 2)
+    {
+        sem_wait(logSem);
+    }
+
+    info(BEGIN, 2, s->id);
+
+    if (s->id == 4)
+    {
+        sem_post(s->sem);
+    }
+
+    if (s->id == 4)
+    {
+        sem_wait(s->sem2);
+    }
+
+    if (s->id == 2)
+    {
+        sem_post(logSem2);
+    }
+
+    info(END, 2, s->id);
+
+    if (s->id == 1)
+    {
+        sem_post(s->sem2);
+    }
+
+    return NULL;
+}
+
 void *thrd3(void *arg)
 {
     fire *s = (fire *)arg;
+
+    if (s->id == 2)
+    {
+        sem_wait(logSem2);
+    }
+
     info(BEGIN, 4, s->id);
+
     info(END, 4, s->id);
+
+    if (s->id == 1)
+    {
+        sem_post(logSem);
+    }
     return NULL;
 }
 
@@ -123,7 +148,18 @@ int main()
     sem_t first2;
     pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
     pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-    // sem_t third;
+
+    int status = 0;
+    logSem = sem_open("1", O_CREAT, 0644, 0);
+    logSem2 = sem_open("2", O_CREAT, 0644, 0);
+    if (logSem == NULL)
+    {
+        return -1;
+    }
+    if (logSem2 == NULL)
+    {
+        return -1;
+    }
     if (pthread_mutex_init(&lock, NULL) != 0)
     {
         return -1;
@@ -144,6 +180,7 @@ int main()
     {
         return -1;
     }
+
     info(BEGIN, 1, 0);
     procese[1] = fork();
     if (procese[1] == -1)
@@ -160,6 +197,7 @@ int main()
             threads_st[i].sem2 = &first2;
             pthread_create(&threads[i], NULL, thrd, &(threads_st[i]));
         }
+
         procese[2] = fork();
         if (procese[2] == -1)
         {
@@ -169,6 +207,7 @@ int main()
         {
             info(BEGIN, 3, 0);
             info(END, 3, 0);
+            exit(status);
         }
         else
         {
@@ -186,6 +225,10 @@ int main()
                     threads_st[i].id = i - 41;
                     pthread_create(&threads[i], NULL, thrd3, &(threads_st[i]));
                 }
+                for (int i = 42; i < 46; i++)
+                {
+                    pthread_join(threads[i], NULL);
+                }
 
                 procese[5] = fork();
                 if (procese[5] == -1)
@@ -196,6 +239,7 @@ int main()
                 {
                     info(BEGIN, 6, 0);
                     info(END, 6, 0);
+                    exit(status);
                 }
                 else
                 {
@@ -216,22 +260,22 @@ int main()
                         {
                             info(BEGIN, 8, 0);
                             info(END, 8, 0);
+                            exit(status);
                         }
                         else
                         {
                             waitpid(procese[7], NULL, 0);
                             info(END, 7, 0);
+                            exit(status);
                         }
                     }
                     else
                     {
-                        for (int i = 42; i < 46; i++)
-                        {
-                            pthread_join(threads[i], NULL);
-                        }
+                        
                         waitpid(procese[5], NULL, 0);
                         waitpid(procese[6], NULL, 0);
                         info(END, 4, 0);
+                        exit(status);
                     }
                 }
             }
@@ -246,6 +290,7 @@ int main()
                 {
                     info(BEGIN, 5, 0);
                     info(END, 5, 0);
+                    exit(status);
                 }
                 else
                 {
@@ -271,6 +316,7 @@ int main()
                             pthread_join(threads[i], NULL);
                         }
                         info(END, 9, 0);
+                        exit(status);
                     }
                     else
                     {
@@ -283,6 +329,7 @@ int main()
                         waitpid(procese[4], NULL, 0);
                         waitpid(procese[8], NULL, 0);
                         info(END, 2, 0);
+                        exit(status);
                     }
                 }
             }
@@ -294,9 +341,19 @@ int main()
         waitpid(procese[1], NULL, 0);
 
         info(END, 1, 0);
-        // free(procese);
-        // free(threads);
-        // free(threads_st);
+        free(procese);
+        free(threads);
+        free(threads_st);
+        sem_destroy(&first);
+        sem_destroy(&first2);
+        sem_destroy(&second);
+        sem_destroy(&second2);
+        sem_close(logSem);
+        sem_close(logSem2);
+        pthread_mutex_destroy(&lock);
+        pthread_cond_destroy(&cond);
+        unlink("1");
+        unlink("2");
     }
 
     return 0;

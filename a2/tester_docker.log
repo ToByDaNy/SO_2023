@@ -6,8 +6,7 @@
 	Checking threads barrier...
 		[1;32mCORRECT        [0m [5 point(s)]
 	Checking threads from different processes...
-		thread T2.2 starts before T4.1 ended
-		[1;33mPARTIAL CORRECT[0m [2 point(s)]
+		[1;32mCORRECT        [0m [5 point(s)]
 [1;35mTest 2...[0m
 	Checking process hierarchy...
 		[1;32mCORRECT        [0m [5 point(s)]
@@ -16,8 +15,7 @@
 	Checking threads barrier...
 		[1;32mCORRECT        [0m [5 point(s)]
 	Checking threads from different processes...
-		thread T2.2 starts before T4.1 ended
-		[1;33mPARTIAL CORRECT[0m [2 point(s)]
+		[1;32mCORRECT        [0m [5 point(s)]
 [1;35mTest 3...[0m
 	Checking process hierarchy...
 		[1;32mCORRECT        [0m [5 point(s)]
@@ -26,9 +24,7 @@
 	Checking threads barrier...
 		[1;32mCORRECT        [0m [5 point(s)]
 	Checking threads from different processes...
-		thread T2.2 starts before T4.1 ended
-		thread T2.2 ends after T4.2 started
-		[1;33mPARTIAL CORRECT[0m [1 point(s)]
+		[1;32mCORRECT        [0m [5 point(s)]
 [1;35mTest 4...[0m
 	Checking process hierarchy...
 		[1;32mCORRECT        [0m [5 point(s)]
@@ -37,9 +33,7 @@
 	Checking threads barrier...
 		[1;32mCORRECT        [0m [5 point(s)]
 	Checking threads from different processes...
-		thread T2.2 starts before T4.1 ended
-		thread T2.2 ends after T4.2 started
-		[1;33mPARTIAL CORRECT[0m [1 point(s)]
+		[1;32mCORRECT        [0m [5 point(s)]
 [1;35mTest 5...[0m
 	Checking process hierarchy...
 		[1;32mCORRECT        [0m [5 point(s)]
@@ -48,7 +42,6 @@
 	Checking threads barrier...
 		[1;32mCORRECT        [0m [5 point(s)]
 	Checking threads from different processes...
-		thread T2.2 starts before T4.1 ended
-		[1;33mPARTIAL CORRECT[0m [2 point(s)]
-Total score: 83 / 100
-Assignment grade: 83.00 / 100
+		[1;32mCORRECT        [0m [5 point(s)]
+Total score: 100 / 100
+Assignment grade: 100.00 / 100
