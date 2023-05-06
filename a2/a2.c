@@ -61,22 +61,22 @@ void *thrd2(void *arg)
     info(BEGIN, 9, s->id);
 
     k++;
-
-    while(k<6 && ks == 0)
+    while (k < 6 && ks == 0)
     {
         sem_wait(s->sem2);
     }
     sem_post(s->sem2);
-    if(s->id ==12)
+    if (s->id == 12)
     {
         info(END, 9, s->id);
-        ks =1;
+        ks = 1;
     }
-    else{
+    else
+    {
         k--;
-         info(END, 9, s->id);
+        info(END, 9, s->id);
     }
-    
+
     sem_post(s->sem);
     return NULL;
 }
@@ -272,12 +272,10 @@ int main()
         waitpid(procese[1], NULL, 0);
 
         info(END, 1, 0);
+        free(procese);
+        free(threads);
+        free(threads_st);
     }
-
-
-    free(procese);
-    free(threads);
-    free(threads_st);
 
     return 0;
 }
