@@ -21,6 +21,7 @@
 typedef struct fire_
 {
     int id;
+    int nrThread;
     sem_t *sem;
     sem_t *sem2;
     pthread_mutex_t *lock;
@@ -76,36 +77,47 @@ void *thrd2(void *arg)
 void *thrd(void *arg)
 {
     fire *s = (fire *)arg;
-    if (s->id == 1)
+    if (s->id == 1 && s->nrThread == 2)
     {
         sem_wait(s->sem);
     }
 
-    if (s->id == 2)
+    if (s->id == 2 && s->nrThread == 2)
     {
         sem_wait(logSem);
     }
+    if (s->id == 2 && s->nrThread == 4)
+    {
+        sem_wait(logSem2);
+    }
 
-    info(BEGIN, 2, s->id);
+    info(BEGIN, s->nrThread, s->id);
 
-    if (s->id == 4)
+
+
+    if (s->id == 4 && s->nrThread == 2)
     {
         sem_post(s->sem);
     }
 
-    if (s->id == 4)
+    if (s->id == 4 && s->nrThread == 2) 
     {
         sem_wait(s->sem2);
     }
 
-    if (s->id == 2)
+    if (s->id == 2 && s->nrThread == 2)
     {
         sem_post(logSem2);
     }
 
-    info(END, 2, s->id);
+    info(END, s->nrThread, s->id);
 
-    if (s->id == 1)
+    if (s->id == 1 && s->nrThread == 4)
+    {
+        sem_post(logSem);
+    }
+
+    if (s->id == 1 && s->nrThread == 2)
     {
         sem_post(s->sem2);
     }
@@ -121,6 +133,9 @@ void *thrd3(void *arg)
     {
         sem_wait(logSem2);
     }
+
+    int auxiliare = 10000;
+    while(auxiliare-- > -100);
 
     info(BEGIN, 4, s->id);
 
@@ -195,6 +210,7 @@ int main()
             threads_st[i].id = i + 1;
             threads_st[i].sem = &first;
             threads_st[i].sem2 = &first2;
+            threads_st[i].nrThread = 2;
             pthread_create(&threads[i], NULL, thrd, &(threads_st[i]));
         }
 
@@ -212,6 +228,7 @@ int main()
         else
         {
             procese[3] = fork();
+            
             if (procese[3] == -1)
             {
                 return -1;
@@ -223,9 +240,10 @@ int main()
                 for (int i = 42; i < 46; i++)
                 {
                     threads_st[i].id = i - 41;
+                    threads_st[i].nrThread = 4;
                     pthread_create(&threads[i], NULL, thrd3, &(threads_st[i]));
                 }
-                for (int i = 42; i < 46; i++)
+                for (int i = 45; i >= 42; i--)
                 {
                     pthread_join(threads[i], NULL);
                 }
@@ -281,6 +299,12 @@ int main()
             }
             else
             {
+                for (int i = 0; i < 4; i++)
+                {
+                    pthread_join(threads[i], NULL);
+                }
+
+                
                 procese[4] = fork();
                 if (procese[4] == -1)
                 {
@@ -320,10 +344,7 @@ int main()
                     }
                     else
                     {
-                        for (int i = 0; i < 4; i++)
-                        {
-                            pthread_join(threads[i], NULL);
-                        }
+                        
                         waitpid(procese[2], NULL, 0);
                         waitpid(procese[3], NULL, 0);
                         waitpid(procese[4], NULL, 0);
