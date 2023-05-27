@@ -1,0 +1,70 @@
+[1;35mTesting ping...[0m
+[TESTER] received string 'BEGIN'
+[TESTER] sending string 'VARIANT'
+[TESTER] received string 'VARIANT'
+[TESTER] received string 'VALUE'
+[TESTER] received number 84112
+[TESTER] sending string 'EXIT'
+Test score: 10 / 10
+[1;35mTesting shm1...[0m
+[TESTER] received string 'BEGIN'
+[TESTER] sending string 'CREATE_SHM'
+[TESTER] sending number 3316555
+[TESTER] received string 'CREATE_SHM'
+[TESTER] received string 'SUCCESS'
+[TESTER] sending string 'EXIT'
+Test score: 10 / 10
+[1;35mTesting shm_write...[0m
+[TESTER] received string 'BEGIN'
+[TESTER] sending string 'CREATE_SHM'
+[TESTER] sending number 3316555
+[TESTER] received string 'CREATE_SHM'
+[TESTER] received string 'SUCCESS'
+[TESTER] sending string 'WRITE_TO_SHM'
+[TESTER] sending number 18306
+[TESTER] sending number 886283
+Test score: 3 / 10
+[1;35mTesting map_inexistent...[0m
+[TESTER] received string 'BEGIN'
+[TESTER] sending string 'MAP_FILE'
+[TESTER] sending string 'test_root/Cg8V58qvsfAg.4PL'
+[TESTER] sending string 'EXIT'
+Test score: 1 / 5
+[1;35mTesting map1...[0m
+[TESTER] received string 'BEGIN'
+[TESTER] sending string 'MAP_FILE'
+[TESTER] sending string 'test_root/09m0tRClQO.FBp'
+[TESTER] sending string 'EXIT'
+Test score: 1 / 5
+[1;35mTesting read_offset...[0m
+[TESTER] received string 'BEGIN'
+[TESTER] sending string 'CREATE_SHM'
+[TESTER] sending number 3316555
+[TESTER] received string 'CREATE_SHM'
+[TESTER] received string 'SUCCESS'
+[TESTER] sending string 'MAP_FILE'
+[TESTER] sending string 'test_root/09m0tRClQO.FBp'
+Test score: 2 / 10
+[1;35mTesting read_section...[0m
+[TESTER] received string 'BEGIN'
+[TESTER] sending string 'CREATE_SHM'
+[TESTER] sending number 3316555
+[TESTER] received string 'CREATE_SHM'
+[TESTER] received string 'SUCCESS'
+[TESTER] sending string 'MAP_FILE'
+[TESTER] sending string 'test_root/9U6nFdjLZR.Tle'
+[TESTER] sending string 'EXIT'
+Test score: 1 / 10
+[1;35mTesting read_logical...[0m
+[TESTER] received string 'BEGIN'
+[TESTER] sending string 'CREATE_SHM'
+[TESTER] sending number 3316555
+[TESTER] received string 'CREATE_SHM'
+[TESTER] received string 'SUCCESS'
+[TESTER] sending string 'MAP_FILE'
+[TESTER] sending string 'test_root/EFzuro0QXy.sTg'
+[TESTER] sending string 'EXIT'
+Test score: 1 / 10
+
+Total score: 29 / 70
+Assignment grade: 41.43 / 100

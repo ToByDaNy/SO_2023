@@ -134,8 +134,6 @@ void *thrd3(void *arg)
         sem_wait(logSem2);
     }
 
-    int auxiliare = 10000;
-    while(auxiliare-- > -100);
 
     info(BEGIN, 4, s->id);
 
@@ -165,8 +163,8 @@ int main()
     pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
     int status = 0;
-    logSem = sem_open("1", O_CREAT, 0644, 0);
-    logSem2 = sem_open("2", O_CREAT, 0644, 0);
+    logSem = sem_open("/1", O_CREAT, 0644, 0);
+    logSem2 = sem_open("/2", O_CREAT, 0644, 0);
     if (logSem == NULL)
     {
         return -1;
@@ -373,8 +371,8 @@ int main()
         sem_close(logSem2);
         pthread_mutex_destroy(&lock);
         pthread_cond_destroy(&cond);
-        unlink("1");
-        unlink("2");
+        sem_unlink("/1");
+        sem_unlink("/2");
     }
 
     return 0;
