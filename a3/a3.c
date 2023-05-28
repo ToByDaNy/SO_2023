@@ -22,37 +22,35 @@ typedef struct Head
     int offset, size;
 } head;
 
-void ok(const char *path, bool *flagSUCCES, bool *flagLines)
+void ok(const char *dataMap, bool *flagSUCCES, unsigned int sectionNr, unsigned int offset, unsigned int nr_bytes, char *result)
 {
-    int fp = open(path, O_RDONLY);
-    if (fp == -1)
-    {
-        close(fp);
-        return;
-    }
-    char MAGIC, NR_OF_SECTIONS;
-    int VERSION;
-    read(fp, &MAGIC, 1);
-    lseek(fp, 2, SEEK_CUR); //  nu am nevoie sa citesc size-ul headerului
-    read(fp, &VERSION, 4);
-    read(fp, &NR_OF_SECTIONS, 1);
+    unsigned int dataOffset = 0;
+    *flagSUCCES = false;
+    char MAGIC = dataMap[dataOffset++], NR_OF_SECTIONS = dataMap[7];
+    dataOffset += 2;
+    int VERSION = (int)((unsigned char)(dataMap[dataOffset + 3]) * 16 * 16 * 16 * 16 * 16 * 16 + (unsigned char)dataMap[dataOffset + 2] * 16 * 16 * 16 * 16 + (unsigned char)dataMap[dataOffset + 1] * 16 * 16 + (unsigned char)dataMap[dataOffset + 0]);
+
+    dataOffset += 4;
+    dataOffset++;
+    
     bool flagMagic = false, flagVersion = false, flagSectNr = false, flagSectTypes = false;
     flagMagic = (MAGIC == 'S');
     flagVersion = (61 <= VERSION && 127 >= VERSION);
     flagSectNr = (5 <= NR_OF_SECTIONS && 17 >= NR_OF_SECTIONS);
     if (!flagMagic)
     {
-        close(fp);
         return;
     }
     if (!flagVersion)
     {
-        close(fp);
         return;
     }
     if (!flagSectNr)
     {
-        close(fp);
+        return;
+    }
+    if (sectionNr > (unsigned int)NR_OF_SECTIONS)
+    {
         return;
     }
 
@@ -60,11 +58,16 @@ void ok(const char *path, bool *flagSUCCES, bool *flagLines)
     for (int i = 0; i < NR_OF_SECTIONS; i++)
     {
         hed[i] = calloc(2, sizeof(int));
-        lseek(fp, 13, SEEK_CUR);
+        dataOffset += 13;
+
         char type = 0;
-        read(fp, &(type), 1);
-        read(fp, &(hed[i][0]), 4);
-        read(fp, &(hed[i][1]), 4);
+        type = dataMap[dataOffset];
+        dataOffset++;
+        hed[i][0] = (int)((unsigned char)(dataMap[dataOffset + 3]) * 16 * 16 * 16 * 16 * 16 * 16 + (unsigned char)dataMap[dataOffset + 2] * 16 * 16 * 16 * 16 + (unsigned char)dataMap[dataOffset + 1] * 16 * 16 + (unsigned char)dataMap[dataOffset + 0]);
+
+        dataOffset += 4;
+        hed[i][1] = (int)((unsigned char)(dataMap[dataOffset + 3]) * 16 * 16 * 16 * 16 * 16 * 16 + (unsigned char)dataMap[dataOffset + 2] * 16 * 16 * 16 * 16 + (unsigned char)dataMap[dataOffset + 1] * 16 * 16 + (unsigned char)dataMap[dataOffset + 0]);
+        dataOffset += 4;
         flagSectTypes = ((int)type == 73 || (int)type == 16 || (int)type == 97 || (int)type == 29);
         if (!flagSectTypes)
         {
@@ -72,9 +75,8 @@ void ok(const char *path, bool *flagSUCCES, bool *flagLines)
         }
     }
 
-    if (!flagSectTypes)
+    if (!flagSectTypes || ((unsigned int)hed[sectionNr - 1][1] < offset + nr_bytes))
     {
-        close(fp);
         for (int i = 0; i < (int)NR_OF_SECTIONS; i++)
         {
             free(hed[i]);
@@ -82,42 +84,22 @@ void ok(const char *path, bool *flagSUCCES, bool *flagLines)
         free(hed);
         return;
     }
-    for (int i = 0; i < (int)NR_OF_SECTIONS; i++)
-    {
-        lseek(fp, hed[i][0], SEEK_SET);
-        char *strr = calloc(hed[i][1] + 1, sizeof(char));
-        read(fp, strr, hed[i][1]);
-        strr[hed[i][1]] = '\0';
-        int count = 0;
-        char *s = strr;
-        while (s != NULL)
-        {
-            char cs[] = "\n";
-            s = strstr(s, cs);
-            if (s != NULL)
-            {
-                count++;
-                s = s + 1;
-                if (count >= 14)
-                {
-                    *flagLines = true;
-                    *flagSUCCES = true;
-                    break;
-                }
-            }
-        }
-        free(strr);
-        strr = NULL;
-        s = NULL;
-    }
+    dataOffset = hed[sectionNr - 1][0]+offset;
+    char *strr = calloc(hed[sectionNr - 1][1] + 1, sizeof(char));
+    strncpy(strr, dataMap + dataOffset, hed[sectionNr - 1][1]);
+    strr[hed[sectionNr - 1][1]] = '\0';
+    *flagSUCCES = true;
+
+    strncpy(result, strr, nr_bytes);
+    free(strr);
+    strr = NULL;
     for (int i = 0; i < (int)NR_OF_SECTIONS; i++)
     {
         free(hed[i]);
     }
     free(hed);
-    close(fp);
+    return;
 }
-
 int main()
 {
     int fd1 = -1;
@@ -159,6 +141,7 @@ int main()
     off_t sizeMap;
     unsigned int memorySize = 0;
     char *dataMap;
+    char *path;
     char *memoryCreation;
     // puts("SUCCESS");
     while (1)
@@ -243,9 +226,9 @@ int main()
             write(fd2, str2, 9);
             int charNr = 0;
             read(fd1, &charNr, 1);
-            char *auxstr = calloc((charNr) + 1, sizeof(char));
-            read(fd1, auxstr, charNr);
-            fdMap = open(auxstr, O_RDONLY);
+            path = calloc((charNr) + 1, sizeof(char));
+            read(fd1, path, charNr);
+            fdMap = open(path, O_RDONLY);
             if (fdMap == -1)
             {
                 write(fd2, error, 6);
@@ -289,8 +272,8 @@ int main()
         }
         else if (strcmp(s, "READ_FROM_FILE_SECTION") == 0)
         {
-            char *str2 = calloc(23, sizeof(char));
-            str2[0] = 21;
+            char *str2 = calloc(24, sizeof(char));
+            str2[0] = 22;
             strcpy(str2 + 1, s);
             unsigned int sectionNr = 0;
             read(fd1, &sectionNr, 4);
@@ -298,22 +281,25 @@ int main()
             read(fd1, &offset, 4);
             unsigned int nr_bytes = 0;
             read(fd1, &nr_bytes, 4);
-            if (((offset + nr_bytes) <= memorySize) && ((offset + nr_bytes) <= sizeMap) && (memoryCreation != (void *)-1) && (dataMap != (void *)-1))
+            bool flag = false;
+            char *fileRead = calloc((nr_bytes + 2), sizeof(char));
+            ok(dataMap, &flag, sectionNr, offset, nr_bytes, fileRead);
+            if (flag)
             {
-                memcpy(memoryCreation, dataMap + offset, nr_bytes);
-                write(fd2, str2, 22);
+                memcpy(memoryCreation, fileRead, (size_t)nr_bytes);
+                write(fd2, str2, 23);
                 write(fd2, success, 8);
             }
             else
             {
-                write(fd2, str2, 22);
+                write(fd2, str2, 23);
                 write(fd2, error, 6);
             }
         }
         else if (strcmp(s, "READ_FROM_LOGICAL_SPACE_OFFSET") == 0)
         {
-            char *str2 = calloc(23, sizeof(char));
-            str2[0] = 21;
+            char *str2 = calloc(32, sizeof(char));
+            str2[0] = 30;
             strcpy(str2 + 1, s);
             unsigned int lOffset = 0;
             read(fd1, &lOffset, 4);
@@ -322,12 +308,12 @@ int main()
             if (((lOffset + nr_bytes) <= memorySize) && ((lOffset + nr_bytes) <= sizeMap) && (memoryCreation != (void *)-1) && (dataMap != (void *)-1))
             {
                 memcpy(memoryCreation, dataMap + lOffset, nr_bytes);
-                write(fd2, str2, 22);
+                write(fd2, str2, 31);
                 write(fd2, success, 8);
             }
             else
             {
-                write(fd2, str2, 22);
+                write(fd2, str2, 31);
                 write(fd2, error, 6);
             }
         }

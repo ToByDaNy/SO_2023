@@ -84,9 +84,28 @@ Test score: 10 / 10
 [TESTER] sending number 11
 [TESTER] sending number 0
 [TESTER] sending number 100
-[TESTER] received string 'READ_FROM_FILE_SECTIO'
+[TESTER] received string 'READ_FROM_FILE_SECTION'
+[TESTER] received string 'ERROR'
+[TESTER] sending string 'READ_FROM_FILE_SECTION'
+[TESTER] sending number 6
+[TESTER] sending number 1730
+[TESTER] sending number 1954
+[TESTER] received string 'READ_FROM_FILE_SECTION'
+[TESTER] received string 'SUCCESS'
+[TESTER] sending string 'READ_FROM_FILE_SECTION'
+[TESTER] sending number 5
+[TESTER] sending number 238
+[TESTER] sending number 1563
+[TESTER] received string 'READ_FROM_FILE_SECTION'
+[TESTER] received string 'SUCCESS'
+[TESTER] sending string 'READ_FROM_FILE_SECTION'
+[TESTER] sending number 1
+[TESTER] sending number 3024
+[TESTER] sending number 3069
+[TESTER] received string 'READ_FROM_FILE_SECTION'
+[TESTER] received string 'SUCCESS'
 [TESTER] sending string 'EXIT'
-Test score: 2 / 10
+Test score: 10 / 10
 [1;35mTesting read_logical...[0m
 [TESTER] received string 'BEGIN'
 [TESTER] sending string 'CREATE_SHM'
@@ -98,11 +117,31 @@ Test score: 2 / 10
 [TESTER] received string 'MAP_FILE'
 [TESTER] received string 'SUCCESS'
 [TESTER] sending string 'READ_FROM_LOGICAL_SPACE_OFFSET'
-[TESTER] sending number 2512
-[TESTER] sending number 2243
-[TESTER] received string 'READ_FROM_LOGICAL_SPA'
+[TESTER] sending number 19999
+[TESTER] sending number 4041
+[TESTER] received string 'READ_FROM_LOGICAL_SPACE_OFFSET'
+[TESTER] received string 'SUCCESS'
+[TESTER] read content incorrect
+[TESTER] sending string 'READ_FROM_LOGICAL_SPACE_OFFSET'
+[TESTER] sending number 33811
+[TESTER] sending number 105
+[TESTER] received string 'READ_FROM_LOGICAL_SPACE_OFFSET'
+[TESTER] received string 'SUCCESS'
+[TESTER] read content incorrect
+[TESTER] sending string 'READ_FROM_LOGICAL_SPACE_OFFSET'
+[TESTER] sending number 37225
+[TESTER] sending number 816
+[TESTER] received string 'READ_FROM_LOGICAL_SPACE_OFFSET'
+[TESTER] received string 'SUCCESS'
+[TESTER] read content incorrect
+[TESTER] sending string 'READ_FROM_LOGICAL_SPACE_OFFSET'
+[TESTER] sending number 46572
+[TESTER] sending number 640
+[TESTER] received string 'READ_FROM_LOGICAL_SPACE_OFFSET'
+[TESTER] received string 'SUCCESS'
+[TESTER] read content incorrect
 [TESTER] sending string 'EXIT'
 Test score: 2 / 10
 
-Total score: 54 / 70
-Assignment grade: 77.14 / 100
+Total score: 62 / 70
+Assignment grade: 88.57 / 100
