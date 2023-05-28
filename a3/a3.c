@@ -140,32 +140,34 @@ int main()
         perror("ERROR\ncannot open the response pipe");
         return (1);
     }
-
+    char *error = calloc(7, sizeof(char));
+    error[0] = 5;
+    strcpy(error + 1, "ERROR");
+    char *success = calloc(9, sizeof(char));
+    strcpy(success + 1, "SUCCESS");
+    success[0] = 7;
     char *TextP = calloc(7, sizeof(char));
     TextP[0] = 5;
-    strcpy(TextP + 1, "BEGIN");
-    // puts(TextP);
 
+    strcpy(TextP + 1, "BEGIN");
     if (write(fd2, TextP, strlen(TextP)) == -1)
     {
         perror("BEGIN");
         return (1);
     }
-    int fd;
+    int fd, fdMap;
+    off_t sizeMap;
     unsigned int memorySize = 0;
+    char *dataMap;
     char *memoryCreation;
     // puts("SUCCESS");
-     //while (1)
-     //{
+    while (1)
+    {
 
         int nr = 0;
         char *req_name = calloc(length, sizeof(char));
         read(fd1, &nr, 1);
-        int i = 0;
-        while (((int)nr) > i)
-        {
-            read(fd1, &req_name[i++], sizeof(char));
-        }
+        read(fd1, req_name, (int)nr);
         char *s = calloc(length, sizeof(char));
         strncpy(s, req_name, (int)nr);
         s[(int)nr] = '\0';
@@ -182,7 +184,7 @@ int main()
             write(fd2, str, 6);
             write(fd2, &aux, 4);
         }
-        if (strcmp(s, "CREATE_SHM") == 0)
+        else if (strcmp(s, "CREATE_SHM") == 0)
         {
             char *str2 = calloc(12, sizeof(char));
             str2[0] = 10;
@@ -193,31 +195,23 @@ int main()
             fd = shm_open("/dYHej3", O_CREAT | O_RDWR, 0664);
             if (fd == -1)
             {
-                char *error = calloc(7, sizeof(char));
-                error[0] = 5;
-                strcpy(error + 1, "ERROR");
                 write(fd2, error, 6);
-                close(fd);
                 perror("OPEN");
-                return 1;
+                break;
             }
+            ftruncate(fd, memorySize);
             memoryCreation = (char *)mmap(NULL, memorySize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
             if (memoryCreation == (void *)-1)
             {
-                char *error = calloc(7, sizeof(char));
-                error[0] = 5;
-                strcpy(error + 1, "ERROR");
                 write(fd2, error, 6);
-                close(fd);
                 perror("MEMORY");
-                return 1;
             }
-            char *success = calloc(9, sizeof(char));
-            strcpy(success + 1, "SUCCESS");
-            success[0] = 7;
-            write(fd2, success, 8);
+            else
+            {
+                write(fd2, success, 8);
+            }
         }
-        if (strcmp(s, "WRITE_TO_SHM") == 0)
+        else if (strcmp(s, "WRITE_TO_SHM") == 0)
         {
             char *str2 = calloc(14, sizeof(char));
             str2[0] = 12;
@@ -225,34 +219,127 @@ int main()
             write(fd2, str2, 13);
             unsigned int offset = 0;
             read(fd1, &offset, 4);
-            char* value = calloc(5,sizeof(char));
-            for(int j = 0 ; j < 4; j ++)
-                read(fd1, &value[j], 1);
-            value[4] = '\0';
-            if (offset >= 0 || offset <= memorySize - 4)
+            char *value = calloc(4, sizeof(char));
+            read(fd1, value, 4);
+            if (offset < memorySize - 4)
             {
-                char* auxstr = calloc(memorySize,sizeof(char));
-                strncpy(auxstr,memoryCreation,memorySize);
-                printf("%c\n",value[0]);
-                strncpy(auxstr+offset,value,4);
-                strncpy(memoryCreation,auxstr,memorySize);
+                memoryCreation[offset] = value[0];
+                memoryCreation[offset + 1] = value[1];
+                memoryCreation[offset + 2] = value[2];
+                memoryCreation[offset + 3] = value[3];
+                write(fd2, success, 8);
             }
-
-            
-            char *success = calloc(9, sizeof(char));
-            strcpy(success + 1, "SUCCESS");
-            success[0] = 7;
-            write(fd2, success, 8);
+            else
+            {
+                strcpy(error + 1, "ERROR");
+                write(fd2, error, 6);
+            }
         }
-        if (strcmp(s, "EXIT") == 0)
+        else if (strcmp(s, "MAP_FILE") == 0)
+        {
+            char *str2 = calloc(10, sizeof(char));
+            str2[0] = 8;
+            strcpy(str2 + 1, s);
+            write(fd2, str2, 9);
+            int charNr = 0;
+            read(fd1, &charNr, 1);
+            char *auxstr = calloc((charNr) + 1, sizeof(char));
+            read(fd1, auxstr, charNr);
+            fdMap = open(auxstr, O_RDONLY);
+            if (fdMap == -1)
+            {
+                write(fd2, error, 6);
+                perror("Could not open input file");
+                break;
+            }
+            sizeMap = lseek(fdMap, 0, SEEK_END);
+            lseek(fdMap, 0, SEEK_SET);
+            dataMap = (char *)mmap(NULL, sizeMap, PROT_READ, MAP_SHARED, fdMap, 0);
+            if (dataMap == (void *)-1)
+            {
+                write(fd2, error, 6);
+                perror("Could not map file");
+            }
+            else
+            {
+
+                write(fd2, success, 8);
+            }
+        }
+        else if (strcmp(s, "READ_FROM_FILE_OFFSET") == 0)
+        {
+            char *str2 = calloc(23, sizeof(char));
+            str2[0] = 21;
+            strcpy(str2 + 1, s);
+            unsigned int offset = 0;
+            read(fd1, &offset, 4);
+            unsigned int nr_bytes = 0;
+            read(fd1, &nr_bytes, 4);
+            if (((offset + nr_bytes) <= memorySize) && ((offset + nr_bytes) <= sizeMap) && (memoryCreation != (void *)-1) && (dataMap != (void *)-1))
+            {
+                memcpy(memoryCreation, dataMap + offset, nr_bytes);
+                write(fd2, str2, 22);
+                write(fd2, success, 8);
+            }
+            else
+            {
+                write(fd2, str2, 22);
+                write(fd2, error, 6);
+            }
+        }
+        else if (strcmp(s, "READ_FROM_FILE_SECTION") == 0)
+        {
+            char *str2 = calloc(23, sizeof(char));
+            str2[0] = 21;
+            strcpy(str2 + 1, s);
+            unsigned int sectionNr = 0;
+            read(fd1, &sectionNr, 4);
+            unsigned int offset = 0;
+            read(fd1, &offset, 4);
+            unsigned int nr_bytes = 0;
+            read(fd1, &nr_bytes, 4);
+            if (((offset + nr_bytes) <= memorySize) && ((offset + nr_bytes) <= sizeMap) && (memoryCreation != (void *)-1) && (dataMap != (void *)-1))
+            {
+                memcpy(memoryCreation, dataMap + offset, nr_bytes);
+                write(fd2, str2, 22);
+                write(fd2, success, 8);
+            }
+            else
+            {
+                write(fd2, str2, 22);
+                write(fd2, error, 6);
+            }
+        }
+        else if (strcmp(s, "READ_FROM_LOGICAL_SPACE_OFFSET") == 0)
+        {
+            char *str2 = calloc(23, sizeof(char));
+            str2[0] = 21;
+            strcpy(str2 + 1, s);
+            unsigned int lOffset = 0;
+            read(fd1, &lOffset, 4);
+            unsigned int nr_bytes = 0;
+            read(fd1, &nr_bytes, 4);
+            if (((lOffset + nr_bytes) <= memorySize) && ((lOffset + nr_bytes) <= sizeMap) && (memoryCreation != (void *)-1) && (dataMap != (void *)-1))
+            {
+                memcpy(memoryCreation, dataMap + lOffset, nr_bytes);
+                write(fd2, str2, 22);
+                write(fd2, success, 8);
+            }
+            else
+            {
+                write(fd2, str2, 22);
+                write(fd2, error, 6);
+            }
+        }
+        else if (strcmp(s, "EXIT") == 0)
         {
             close(fd1);
             close(fd2);
             unlink(FIFO_RESP);
             close(fd);
             shm_unlink("/dYHej3");
-            return 0;
+            break;
         }
-    //}
+    }
     return 0;
 }

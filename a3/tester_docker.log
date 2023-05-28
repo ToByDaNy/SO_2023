@@ -23,19 +23,31 @@ Test score: 10 / 10
 [TESTER] sending string 'WRITE_TO_SHM'
 [TESTER] sending number 18306
 [TESTER] sending number 886283
-Test score: 3 / 10
+[TESTER] received string 'WRITE_TO_SHM'
+[TESTER] received string 'SUCCESS'
+[TESTER] sending string 'WRITE_TO_SHM'
+[TESTER] sending number 3316553
+[TESTER] sending number 305419896
+[TESTER] received string 'WRITE_TO_SHM'
+[TESTER] received string 'ERROR'
+[TESTER] sending string 'EXIT'
+Test score: 10 / 10
 [1;35mTesting map_inexistent...[0m
 [TESTER] received string 'BEGIN'
 [TESTER] sending string 'MAP_FILE'
 [TESTER] sending string 'test_root/Cg8V58qvsfAg.4PL'
+[TESTER] received string 'MAP_FILE'
+[TESTER] received string 'ERROR'
 [TESTER] sending string 'EXIT'
-Test score: 1 / 5
+Test score: 5 / 5
 [1;35mTesting map1...[0m
 [TESTER] received string 'BEGIN'
 [TESTER] sending string 'MAP_FILE'
 [TESTER] sending string 'test_root/09m0tRClQO.FBp'
+[TESTER] received string 'MAP_FILE'
+[TESTER] received string 'SUCCESS'
 [TESTER] sending string 'EXIT'
-Test score: 1 / 5
+Test score: 5 / 5
 [1;35mTesting read_offset...[0m
 [TESTER] received string 'BEGIN'
 [TESTER] sending string 'CREATE_SHM'
@@ -44,7 +56,20 @@ Test score: 1 / 5
 [TESTER] received string 'SUCCESS'
 [TESTER] sending string 'MAP_FILE'
 [TESTER] sending string 'test_root/09m0tRClQO.FBp'
-Test score: 2 / 10
+[TESTER] received string 'MAP_FILE'
+[TESTER] received string 'SUCCESS'
+[TESTER] sending string 'READ_FROM_FILE_OFFSET'
+[TESTER] sending number 45132
+[TESTER] sending number 50
+[TESTER] received string 'READ_FROM_FILE_OFFSET'
+[TESTER] received string 'ERROR'
+[TESTER] sending string 'READ_FROM_FILE_OFFSET'
+[TESTER] sending number 22565
+[TESTER] sending number 50
+[TESTER] received string 'READ_FROM_FILE_OFFSET'
+[TESTER] received string 'SUCCESS'
+[TESTER] sending string 'EXIT'
+Test score: 10 / 10
 [1;35mTesting read_section...[0m
 [TESTER] received string 'BEGIN'
 [TESTER] sending string 'CREATE_SHM'
@@ -53,8 +78,15 @@ Test score: 2 / 10
 [TESTER] received string 'SUCCESS'
 [TESTER] sending string 'MAP_FILE'
 [TESTER] sending string 'test_root/9U6nFdjLZR.Tle'
+[TESTER] received string 'MAP_FILE'
+[TESTER] received string 'SUCCESS'
+[TESTER] sending string 'READ_FROM_FILE_SECTION'
+[TESTER] sending number 11
+[TESTER] sending number 0
+[TESTER] sending number 100
+[TESTER] received string 'READ_FROM_FILE_SECTIO'
 [TESTER] sending string 'EXIT'
-Test score: 1 / 10
+Test score: 2 / 10
 [1;35mTesting read_logical...[0m
 [TESTER] received string 'BEGIN'
 [TESTER] sending string 'CREATE_SHM'
@@ -63,8 +95,14 @@ Test score: 1 / 10
 [TESTER] received string 'SUCCESS'
 [TESTER] sending string 'MAP_FILE'
 [TESTER] sending string 'test_root/EFzuro0QXy.sTg'
+[TESTER] received string 'MAP_FILE'
+[TESTER] received string 'SUCCESS'
+[TESTER] sending string 'READ_FROM_LOGICAL_SPACE_OFFSET'
+[TESTER] sending number 2512
+[TESTER] sending number 2243
+[TESTER] received string 'READ_FROM_LOGICAL_SPA'
 [TESTER] sending string 'EXIT'
-Test score: 1 / 10
+Test score: 2 / 10
 
-Total score: 29 / 70
-Assignment grade: 41.43 / 100
+Total score: 54 / 70
+Assignment grade: 77.14 / 100
